@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulado de Prova</title>
+
+  <link rel="stylesheet" href="../Style/style.css">
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="card">
+
+      <h2>SIMULADO DE PROVA</h2>
+
+      <p id="materia"></p>
+
+      <h3 id="numeroPergunta"></h3>
+
+      <p id="textoPergunta"></p>
+
+      <div id="alternativas"></div>
+
+      <br>
+
+      <div class="footer">
+        <button class="btn outline" onclick="perguntaAnterior()">
+          Anterior
+        </button>
+
+        <button class="btn primary" onclick="proximaPergunta()">
+          Próxima Pergunta
+        </button>
+
+        <button class="btn outline" onclick="finalizarSimulado()">
+          Finalizar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let perguntas = [];
+    let indiceAtual = 0;
+    let respostas = [];
+
+    async function carregarSimulado() {
+      const resposta = await fetch("http://localhost:3000/tarefas");
+      const tarefas = await resposta.json();
+
+      perguntas = tarefas.map((tarefa, index) => {
+        return {
+          materia: tarefa.materia,
+          pergunta: `Sobre o tópico "${tarefa.topico}", qual alternativa está correta?`,
+          alternativas: [
+            `Estudar ${tarefa.topico} ajuda na matéria ${tarefa.materia}`,
+            `${tarefa.topico} não tem relação com ${tarefa.materia}`,
+            `A matéria ${tarefa.materia} não precisa de estudo`
+          ],
+          correta: 0
+        };
+      });
+
+      if (perguntas.length === 0) {
+        document.getElementById("textoPergunta").innerText =
+          "Nenhuma tarefa cadastrada para gerar o simulado.";
+        return;
+      }
+
+      mostrarPergunta();
+    }
+
+    function mostrarPergunta() {
+      const pergunta = perguntas[indiceAtual];
+
+      document.getElementById("materia").innerText =
+        "Matéria: " + pergunta.materia;
+
+      document.getElementById("numeroPergunta").innerText =
+        "Pergunta " + (indiceAtual + 1) + ":";
+
+      document.getElementById("textoPergunta").innerText =
+        pergunta.pergunta;
+
+      const divAlternativas = document.getElementById("alternativas");
+
+      divAlternativas.innerHTML = "";
+
+      pergunta.alternativas.forEach((alternativa, index) => {
+        divAlternativas.innerHTML += `
+          <label>
+            <input
+              type="radio"
+              name="resposta"
+              value="${index}"
+              ${respostas[indiceAtual] == index ? "checked" : ""}
+              onchange="salvarResposta(${index})"
+            >
+            ${alternativa}
+          </label>
+          <br><br>
+        `;
+      });
+    }
+
+    function salvarResposta(index) {
+      respostas[indiceAtual] = index;
+    }
+
+    function proximaPergunta() {
+      if (indiceAtual < perguntas.length - 1) {
+        indiceAtual++;
+        mostrarPergunta();
+      }
+    }
+
+    function perguntaAnterior() {
+      if (indiceAtual > 0) {
+        indiceAtual--;
+        mostrarPergunta();
+      }
+    }
+
+    function finalizarSimulado() {
+      let acertos = 0;
+
+      perguntas.forEach((pergunta, index) => {
+        if (respostas[index] === pergunta.correta) {
+          acertos++;
+        }
+      });
+
+      alert(`Você acertou ${acertos} de ${perguntas.length} perguntas.`);
+
+      window.location.href = "planejamento.html";
+    }
+
+    carregarSimulado();
+  </script>
+
+</body>
+</html>

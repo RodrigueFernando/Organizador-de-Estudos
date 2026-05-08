@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+
+  <link rel="stylesheet" href="../Style/style.css">
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="card">
+      <h2>ORGANIZADOR DE ESTUDOS</h2>
+
+      <div class="form-group">
+        <label>Email:</label>
+        <input type="email" id="email" placeholder="Digite seu e-mail">
+      </div>
+
+      <div class="form-group">
+        <label>Senha:</label>
+        <input type="password" id="senha" placeholder="Digite sua senha">
+      </div>
+
+      <a href="#" class="link">Esqueci minha senha</a>
+
+      <div class="footer">
+        <button class="btn primary" onclick="entrar()">Entrar</button>
+        <button class="btn outline" onclick="cadastrar()">Cadastrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function cadastrar() {
+      const email = document.getElementById("email").value;
+      const senha = document.getElementById("senha").value;
+
+      if (email === "" || senha === "") {
+        alert("Preencha todos os campos!");
+        return;
+      }
+
+      try {
+        const resposta = await fetch("http://localhost:3000/cadastrar", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email, senha })
+        });
+
+        const dados = await resposta.json();
+        alert(dados.mensagem);
+
+      } catch (erro) {
+        alert("Erro ao conectar com o servidor!");
+      }
+    }
+
+    async function entrar() {
+      const email = document.getElementById("email").value;
+      const senha = document.getElementById("senha").value;
+
+      try {
+        const resposta = await fetch("http://localhost:3000/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email, senha })
+        });
+
+        const dados = await resposta.json();
+
+        if (dados.sucesso) {
+         // window.location.href = "planejamento.html";
+         alert("Login OK, vou para planejamento");
+         window.location.href = "./planejamento.html";
+        } else {
+          alert(dados.mensagem);
+        }
+
+      } catch (erro) {
+        alert("Servidor não está rodando!");
+      }
+    }
+  </script>
+
+</body>
+</html>

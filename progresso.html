@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+
+  <!-- configuração de caracteres -->
+  <meta charset="UTF-8">
+
+  <!-- título -->
+  <title>Progresso</title>
+
+  <!-- css -->
+  <link rel="stylesheet" href="../Style/style.css">
+
+</head>
+
+<body>
+
+  <!-- container principal -->
+  <div class="container">
+
+    <!-- card -->
+    <div class="card">
+
+      <!-- título -->
+      <h2>PROGRESSO DE ESTUDO</h2>
+
+      <!-- texto -->
+      <p>Geral:</p>
+
+      <!-- lista de progresso -->
+      <div class="progresso-box" id="listaProgresso">
+
+      </div>
+
+      <br>
+
+      <!-- botão voltar -->
+      <button class="btn primary" onclick="voltarMenu()">
+
+        Voltar para o Menu
+
+      </button>
+
+    </div>
+  </div>
+
+  <script>
+
+    // voltar para planejamento
+    function voltarMenu() {
+
+      window.location.href = "planejamento.html";
+
+    }
+
+    // carregar progresso
+    async function carregarProgresso() {
+
+      try {
+
+        // buscar tarefas
+        const resposta = await fetch("http://localhost:3000/tarefas");
+
+        // converter json
+        const tarefas = await resposta.json();
+
+        // pegar div
+        const lista = document.getElementById("listaProgresso");
+
+        // limpar conteúdo
+        lista.innerHTML = "<h3>📊 Gráfico de evolução</h3>";
+
+        // percorrer tarefas
+        tarefas.forEach(tarefa => {
+
+          // progresso só muda quando checkbox for marcado
+          let progresso = 0;
+
+          // se concluída = true
+          if (tarefa.concluida === true) {
+
+            progresso = 100;
+
+          }
+
+          // adicionar html
+          lista.innerHTML += `
+
+            <div class="item-progresso">
+
+              <!-- nome da matéria -->
+              <span>
+
+                ${tarefa.materia}:
+
+              </span>
+
+              <!-- barra -->
+              <progress
+                value="${progresso}"
+                max="100"
+              >
+              </progress>
+
+              <!-- porcentagem -->
+              <span>
+
+                ${progresso}%
+
+              </span>
+
+            </div>
+
+            <br>
+
+          `;
+
+        });
+
+      } catch (erro) {
+
+        console.log("erro:", erro);
+
+      }
+
+    }
+
+    // iniciar
+    carregarProgresso();
+
+  </script>
+
+</body>
+</html>
