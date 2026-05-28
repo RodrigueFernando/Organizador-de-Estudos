@@ -11,11 +11,11 @@ test.use({
     }
 });
 
-
+<link rel="stylesheet" href="/paginas/Style/style.css"></link>
 test('cadastro e login', async ({ page }) => {
 
   // CADASTRO
-  await page.goto('http://127.0.0.1:5500/Index/home.html');
+await page.goto('http://127.0.0.1:5500/paginas/index.html');
 
 
   //await page.waitForTimeout(1000);
@@ -28,7 +28,7 @@ test('cadastro e login', async ({ page }) => {
   //await page.waitForTimeout(1000);
 
   // LOGIN
-  //await page.goto('http://127.0.0.1:5500/Index/home.html');
+  //await page.goto('http://127.0.0.1:5500/paginas/index.html');
 
   await page.fill('#email', 'fernando@gmail.com');
   await page.fill('#senha', '33747467');
@@ -49,8 +49,7 @@ test('cadastro e login', async ({ page }) => {
 
 test('deve abrir questionário pelo checkbox e responder', async ({ page }) => {
 
-  await page.goto('http://127.0.0.1:5500/Index/planejamento.html');
-
+  await page.goto('http://127.0.0.1:5500/paginas/planejamento.html');
   await page.waitForTimeout(3000);
 
   // marca a primeira tarefa como concluída
@@ -84,7 +83,7 @@ test('deve abrir questionário pelo checkbox e responder', async ({ page }) => {
 test('deve abrir PDF', async ({ page, context }) => {
 
   
-  await page.goto('http://127.0.0.1:5500/Index/planejamento.html');
+  await page.goto('http://127.0.0.1:5500/paginas/planejamento.html');
 
 
 
@@ -112,26 +111,13 @@ test('deve abrir PDF', async ({ page, context }) => {
 
 
 
-test.skip('deve abrir página de tarefa', async ({ page }) => {
 
-  await page.goto('http://127.0.0.1:5500/Index/planejamento.html');
-
-  //await page.waitForTimeout(2000);
-
-  // clica botão
-  await page.click('text=Adicionar Tarefa');
-
-  // valida redirecionamento
-  await expect(page).toHaveURL(/.*tarefa.*/);
-  await browser.close();
-
-});
 
 
 test('deve abrir progresso e voltar ao menu', async ({ page }) => {
 
   // começa no planejamento
-  await page.goto('http://127.0.0.1:5500/Index/planejamento.html');
+    await page.goto('http://127.0.0.1:5500/paginas/planejamento.html');
 
   // clica em Ver Progresso
   await page.click('text=Ver Progresso');
@@ -152,9 +138,9 @@ test('deve abrir progresso e voltar ao menu', async ({ page }) => {
 
 //.only
 
-test.only('deve abrir simulado e testar botões', async ({ page }) => {
+test('deve abrir simulado e testar botões', async ({ page }) => {
 
-  await page.goto('http://127.0.0.1:5500/Index/planejamento.html');
+  await page.goto('http://127.0.0.1:5500/paginas/planejamento.html');
 
   await page.waitForTimeout(2000);
 
