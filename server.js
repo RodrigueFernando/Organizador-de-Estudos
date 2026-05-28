@@ -13,10 +13,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// serve index.html, Style/style.css, script etc.
 app.use(express.static(__dirname));
-app.use("/Style", express.static(path.join(__dirname, "Style")));
-app.use("/script", express.static(path.join(__dirname, "script")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
