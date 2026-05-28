@@ -12,11 +12,11 @@
   <div class="container">
     <div class="card">
 
-      <h2>NOVA TAREFA DE ESTUDO</h2>
+      <h2>TAREFA DE ESTUDO</h2>
 
       <div class="form-group">
         <label>Matéria:</label>
-        <input type="text" id="materia" placeholder="[ Matemática ]">
+        <input type="text" id="materia" placeholder="Matemática">
       </div>
 
       <div class="form-group">
@@ -26,30 +26,30 @@
 
       <div class="form-group">
         <label>Tópico:</label>
-        <input type="text" id="topico" placeholder="[ Funções ]">
+        <input type="text" id="topico" placeholder="Funções">
       </div>
 
       <div class="form-group">
         <label>Dificuldade:</label>
-        <input type="number" id="dificuldade" placeholder="[ 3 ]">
+        <input type="number" id="dificuldade" placeholder="3">
       </div>
 
       <div class="form-group">
         <label>Data da prova:</label>
-        <input type="text" id="dataProva" placeholder="[ 25/03/2026 ]">
+        <input type="date" id="dataProva">
       </div>
 
       <div class="footer">
 
-        <button class="btn primary" onclick="salvarTarefa()">
+        <button type="button" class="btn primary" onclick="salvarTarefa()">
           Salvar
         </button>
 
-        <button class="btn outline" onclick="editarTarefa()">
+        <button type="button" class="btn outline" onclick="editarTarefa()">
           Editar
         </button>
 
-        <button class="btn outline" onclick="voltar()">
+        <button type="button" class="btn outline" onclick="voltar()">
           Voltar
         </button>
 
@@ -59,97 +59,61 @@
   </div>
 
   <script>
+    const API_URL = "http://localhost:3000";
 
-    // SALVAR TAREFA
     async function salvarTarefa() {
-
-      // PEGAR DADOS
-      const materia = document.getElementById("materia").value;
-      const topico = document.getElementById("topico").value;
-      const dificuldade = document.getElementById("dificuldade").value;
+      const materia = document.getElementById("materia").value.trim();
+      const topico = document.getElementById("topico").value.trim();
+      const dificuldade = document.getElementById("dificuldade").value.trim();
       const dataProva = document.getElementById("dataProva").value;
-
-      // PEGAR PDF
       const pdf = document.getElementById("pdf").files[0];
 
-      // VALIDAR CAMPOS
-      if (
-        materia === "" ||
-        topico === "" ||
-        dificuldade === "" ||
-        dataProva === ""
-      ) {
-
+      if (!materia || !topico || !dificuldade || !dataProva) {
         alert("Preencha todos os campos!");
         return;
-
       }
 
-      // VALIDAR PDF
       if (!pdf) {
-
         alert("Selecione um arquivo PDF!");
         return;
-
       }
 
-      // FORM DATA
       const formData = new FormData();
 
       formData.append("materia", materia);
       formData.append("topico", topico);
       formData.append("dificuldade", dificuldade);
       formData.append("dataProva", dataProva);
-
       formData.append("pdf", pdf);
 
       try {
-
-        // ENVIAR PARA O SERVER
-        const resposta = await fetch("http://localhost:3000/salvar-tarefa", {
-
+        const resposta = await fetch(`${API_URL}/salvar-tarefa`, {
           method: "POST",
           body: formData
-
         });
 
         const dados = await resposta.json();
 
-        // SUCESSO
         if (dados.sucesso) {
-
           alert("Tarefa salva com sucesso!");
-
           window.location.href = "planejamento.html";
-
         } else {
-
-          alert("Erro ao salvar tarefa!");
-
+          alert(dados.mensagem);
         }
 
       } catch (erro) {
-
-        alert("Servidor não está rodando!");
-
+        console.error(erro);
+        alert("Erro ao conectar com o servidor!");
       }
-
     }
 
-    // EDITAR
     function editarTarefa() {
-
       alert("Agora você pode editar os campos.");
-
     }
 
-    // VOLTAR
     function voltar() {
-
       window.location.href = "planejamento.html";
-
     }
-
   </script>
 
 </body>

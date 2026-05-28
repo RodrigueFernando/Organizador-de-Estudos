@@ -26,24 +26,28 @@
       <a href="#" class="link">Esqueci minha senha</a>
 
       <div class="footer">
-        <button class="btn primary" onclick="entrar()">Entrar</button>
-        <button class="btn outline" onclick="cadastrar()">Cadastrar</button>
+        <button type="button" class="btn primary" onclick="entrar()">Entrar</button>
+        <button type="button" class="btn outline" onclick="cadastrar()">Cadastrar</button>
       </div>
     </div>
   </div>
 
   <script>
-    async function cadastrar() {
-      const email = document.getElementById("email").value;
-      const senha = document.getElementById("senha").value;
+    const API_URL = "http://localhost:3000";
 
-      if (email === "" || senha === "") {
+    async function cadastrar() {
+      alert("Clicou em cadastrar");
+
+      const email = document.getElementById("email").value.trim();
+      const senha = document.getElementById("senha").value.trim();
+
+      if (!email || !senha) {
         alert("Preencha todos os campos!");
         return;
       }
 
       try {
-        const resposta = await fetch("http://localhost:3000/cadastrar", {
+        const resposta = await fetch(`${API_URL}/cadastrar`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -55,16 +59,24 @@
         alert(dados.mensagem);
 
       } catch (erro) {
+        console.error(erro);
         alert("Erro ao conectar com o servidor!");
       }
     }
 
     async function entrar() {
-      const email = document.getElementById("email").value;
-      const senha = document.getElementById("senha").value;
+      alert("Clicou em entrar");
+
+      const email = document.getElementById("email").value.trim();
+      const senha = document.getElementById("senha").value.trim();
+
+      if (!email || !senha) {
+        alert("Preencha todos os campos!");
+        return;
+      }
 
       try {
-        const resposta = await fetch("http://localhost:3000/login", {
+        const resposta = await fetch(`${API_URL}/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -75,14 +87,14 @@
         const dados = await resposta.json();
 
         if (dados.sucesso) {
-         // window.location.href = "planejamento.html";
-         alert("Login OK, vou para planejamento");
-         window.location.href = "./planejamento.html";
+          alert("Login OK, vou para planejamento");
+          window.location.href = "./planejamento.html";
         } else {
           alert(dados.mensagem);
         }
 
       } catch (erro) {
+        console.error(erro);
         alert("Servidor não está rodando!");
       }
     }

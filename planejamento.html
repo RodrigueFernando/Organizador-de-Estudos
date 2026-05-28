@@ -1,313 +1,133 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-
-  <!-- configuração de caracteres -->
   <meta charset="UTF-8">
-
-  <!-- título da página -->
   <title>Planejamento</title>
 
-  <!-- css -->
   <link rel="stylesheet" href="../Style/style.css">
 
-  <style>
-
-    /* tela toda */
-    body {
-
-      margin: 0;
-      padding: 0;
-
-      width: 100%;
-      min-height: 100vh;
-
-      background-color: #dfe3ea;
-
-      font-family: Arial, sans-serif;
-
-    }
-
-    /* container principal */
-    .container {
-
-      width: 100%;
-      min-height: 100vh;
-
-      padding: 40px;
-
-      box-sizing: border-box;
-
-    }
-
-    /* card */
-    .card {
-
-      width: 100%;
-      min-height: calc(100vh - 80px);
-
-      background: #f1f3f6;
-
-      border-radius: 10px;
-
-      padding: 40px;
-
-      box-sizing: border-box;
-
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-
-    }
-
-    /* título */
-    h2 {
-
-      font-size: 32px;
-
-      margin-bottom: 20px;
-
-    }
-
-    /* texto */
-    p {
-
-      font-size: 20px;
-
-    }
-
-    /* tarefas */
-    #listaTarefas div {
-
-      padding: 20px;
-
-      border-bottom: 1px solid #ccc;
-
-    }
-
-    /* checkbox */
-    input[type="checkbox"] {
-
-      width: 20px;
-      height: 20px;
-
-    }
-
-    /* link pdf */
-    a {
-
-      font-size: 18px;
-
-      text-decoration: none;
-
-    }
-
-    /* botões */
-    .footer-buttons {
-
-      display: flex;
-
-      gap: 20px;
-
-      flex-wrap: wrap;
-
-      margin-top: 40px;
-
-    }
-
-    /* botão */
-    button {
-
-      padding: 15px 30px;
-
-      font-size: 18px;
-
-      cursor: pointer;
-
-    }
-
-  </style>
-
-</head>
+  
 
 <body>
-
-  <!-- container principal -->
   <div class="container">
-
-    <!-- card -->
     <div class="card">
-
-      <!-- título -->
       <h2>PLANEJAMENTO DE ESTUDOS</h2>
 
-      <!-- texto -->
       <p>Conteúdo do dia:</p>
 
-      <!-- lista tarefas -->
       <div id="listaTarefas"></div>
 
-      <!-- botões -->
       <div class="footer-buttons">
-
-        <!-- progresso -->
-        <button class="btn primary" onclick="verProgresso()">
-
+        <button type="button" class="btn primary" onclick="verProgresso()">
           Ver Progresso
-
         </button>
 
-        <!-- adicionar -->
-        <button class="btn outline" onclick="adicionarTarefa()">
-
+        <button type="button" class="btn outline" onclick="adicionarTarefa()">
           Adicionar Tarefa
-
         </button>
 
-        <!-- simulado -->
-        <button class="btn primary" onclick="abrirSimulado()">
-
+        <button type="button" class="btn primary" onclick="abrirSimulado()">
           Fazer Simulado
-
         </button>
-
       </div>
-
     </div>
   </div>
 
   <script>
+    const API_URL = "http://localhost:3000";
 
-    // abrir tarefa
     function adicionarTarefa() {
-
       window.location.href = "tarefa.html";
-
     }
 
-    // abrir progresso
     function verProgresso() {
-
       window.location.href = "progresso.html";
-
     }
 
-    // abrir simulado
     function abrirSimulado() {
-
       window.location.href = "simulado.html";
-
     }
 
-    // carregar tarefas
     async function carregarTarefas() {
-
       try {
-
-        // buscar tarefas
-        const resposta = await fetch("http://localhost:3000/tarefas");
-
-        // converter json
+        const resposta = await fetch(`${API_URL}/tarefas`);
         const tarefas = await resposta.json();
 
-        // pegar lista
         const lista = document.getElementById("listaTarefas");
-
-        // limpar
         lista.innerHTML = "";
 
-        // percorrer tarefas
-        tarefas.forEach((tarefa, index) => {
+        if (!Array.isArray(tarefas) || tarefas.length === 0) {
+          lista.innerHTML = "<p>Nenhuma tarefa cadastrada.</p>";
+          return;
+        }
 
-          // adicionar html
+        tarefas.forEach((tarefa) => {
           lista.innerHTML += `
-
             <div>
-
               <label>
-
                 <input
                   type="checkbox"
                   ${tarefa.concluida ? "checked" : ""}
-                  onchange="alterarStatus(${index})"
+                  onchange="alterarStatus(${tarefa.id}, this.checked)"
                 >
 
                 <span style="
-                  text-decoration:
-                  ${tarefa.concluida ? 'line-through' : 'none'};
-
-                  color:
-                  ${tarefa.concluida ? 'green' : 'black'};
-
+                  text-decoration: ${tarefa.concluida ? "line-through" : "none"};
+                  color: ${tarefa.concluida ? "green" : "black"};
                   font-size: 22px;
                 ">
-
-                  ${tarefa.materia} - ${tarefa.topico}
-
+                  ${tarefa.materia || "Sem matéria"} - ${tarefa.topico || tarefa.titulo}
                 </span>
-
               </label>
 
               <br><br>
 
-              <a
-                href="http://localhost:3000/uploads/${tarefa.pdf}"
-                target="_blank"
-              >
-
-                Abrir PDF
-
-              </a>
-
+              ${
+                tarefa.pdf
+                  ? `<a href="${API_URL}/uploads/${tarefa.pdf}" target="_blank">Abrir PDF</a>`
+                  : `<span>Sem PDF</span>`
+              }
             </div>
-
           `;
-
         });
 
       } catch (erro) {
-
-        console.log("erro:", erro);
-
+        console.error("Erro ao carregar tarefas:", erro);
+        document.getElementById("listaTarefas").innerHTML =
+          "<p>Erro ao carregar tarefas.</p>";
       }
-
     }
 
-    // alterar status
-    async function alterarStatus(index) {
+    async function alterarStatus(id, concluida) {
+      try {
+        const resposta = await fetch(`${API_URL}/atualizar-tarefa/${id}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ concluida })
+        });
 
-      // buscar tarefas
-      const resposta = await fetch("http://localhost:3000/tarefas");
+        const dados = await resposta.json();
 
-      // converter json
-      const tarefas = await resposta.json();
+        if (!dados.sucesso) {
+          alert(dados.mensagem);
+          return;
+        }
 
-      // alterar status
-      tarefas[index].concluida =
-      !tarefas[index].concluida;
+        if (concluida) {
+          window.location.href = `questionario.html?id=${id}`;
+        } else {
+          carregarTarefas();
+        }
 
-      // salvar
-      await fetch("http://localhost:3000/atualizar-tarefas", {
-
-        method: "POST",
-
-        headers: {
-
-          "Content-Type": "application/json"
-
-        },
-
-        body: JSON.stringify(tarefas)
-
-      });
-
-      // atualizar lista
-      carregarTarefas();
-
+      } catch (erro) {
+        console.error("Erro ao atualizar tarefa:", erro);
+        alert("Erro ao atualizar tarefa.");
+      }
     }
 
-    // iniciar
     carregarTarefas();
-
   </script>
-
 </body>
 </html>
