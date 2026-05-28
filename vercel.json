@@ -2,40 +2,8 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/teste",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/teste-banco",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/login",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/cadastrar",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/tarefas",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/salvar-tarefa",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/atualizar-tarefa/:id",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/gerar-simulado",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/gerar-questionario/:id",
-      "destination": "/api/index"
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
     }
   ]
 }
