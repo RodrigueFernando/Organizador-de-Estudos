@@ -402,6 +402,29 @@ Regras:
     });
   }
 });
+// HEALTH
+app.get(["/health", "/api/health"], (req, res) => {
+  res.json({
+    status: "ok",
+    mensagem: "Servidor online no Vercel"
+  });
+});
+
+// ABRIR PDF
+app.get(["/uploads/:nome", "/api/uploads/:nome"], (req, res) => {
+  const { nome } = req.params;
+
+  const caminhoArquivo = path.join(os.tmpdir(), nome);
+
+  res.sendFile(caminhoArquivo, (err) => {
+    if (err) {
+      res.status(404).json({
+        sucesso: false,
+        mensagem: "PDF não encontrado."
+      });
+    }
+  });
+});
 
 // IMPORTANTE PARA VERCEL
 module.exports = app;

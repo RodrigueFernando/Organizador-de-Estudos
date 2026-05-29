@@ -5,7 +5,7 @@
   <title>Nova Tarefa</title>
 
   <link rel="stylesheet" href="./Style/style.css">
- </head>
+</head>
 
 <body>
 
@@ -61,60 +61,62 @@
   <script>
     const API_URL = "";
 
-    async function salvarTarefa() {
-      const materia = document.getElementById("materia").value.trim();
-      const topico = document.getElementById("topico").value.trim();
-      const dificuldade = document.getElementById("dificuldade").value.trim();
-      const dataProva = document.getElementById("dataProva").value;
-      const pdf = document.getElementById("pdf").files[0];
-
-      if (!materia || !topico || !dificuldade || !dataProva) {
-        alert("Preencha todos os campos!");
-        return;
-      }
-
-      if (!pdf) {
-        alert("Selecione um arquivo PDF!");
-        return;
-      }
-
-      const formData = new FormData();
-
-      formData.append("materia", materia);
-      formData.append("topico", topico);
-      formData.append("dificuldade", dificuldade);
-      formData.append("dataProva", dataProva);
-      formData.append("pdf", pdf);
-
-      try {
-        const resposta = await fetch(`${API_URL}/salvar-tarefa`, {
-          method: "POST",
-          body: formData
-        });
-
-        const dados = await resposta.json();
-
-        if (dados.sucesso) {
-          alert("Tarefa salva com sucesso!");
-          window.location.href = "planejamento.html";
-        } else {
-          alert(dados.mensagem);
-        }
-
-      } catch (erro) {
-        console.error(erro);
-        alert("Erro ao conectar com o servidor!");
-      }
-    }
-
-    function editarTarefa() {
-      alert("Agora você pode editar os campos.");
-    }
-
-    function voltar() {
-      window.location.href = "planejamento.html";
-    }
+    
   </script>
+
+  <script>
+  async function salvarTarefa() {
+    const materia = document.getElementById("materia").value.trim();
+    const topico = document.getElementById("topico").value.trim();
+    const dificuldade = document.getElementById("dificuldade").value.trim();
+    const dataProva = document.getElementById("dataProva").value;
+    const pdf = document.getElementById("pdf").files[0];
+
+    if (!materia || !topico || !dificuldade || !dataProva) {
+      alert("Preencha todos os campos!");
+      return;
+    }
+
+    if (!pdf) {
+      alert("Selecione um arquivo PDF!");
+      return;
+    }
+
+    const leitor = new FileReader();
+
+    leitor.onload = function () {
+      const tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
+
+      const novaTarefa = {
+        id: Date.now(),
+        materia: materia,
+        topico: topico,
+        dificuldade: dificuldade,
+        dataProva: dataProva,
+        concluida: false,
+        pdfNome: pdf.name,
+        pdfBase64: leitor.result
+      };
+
+      tarefas.push(novaTarefa);
+
+      localStorage.setItem("tarefas", JSON.stringify(tarefas));
+
+      alert("Tarefa salva com sucesso!");
+      window.location.href = "planejamento.html";
+    };
+
+    leitor.readAsDataURL(pdf);
+  }
+
+  function editarTarefa() {
+    alert("Agora você pode editar os campos.");
+  }
+
+  function voltar() {
+    window.location.href = "planejamento.html";
+  }
+</script>
 
 </body>
 </html>

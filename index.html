@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Login</title>
 
- <link rel="stylesheet" href="./Style/style.css">
+  <link rel="stylesheet" href="./Style/style.css">
 </head>
 
 <body>
@@ -47,7 +47,7 @@
       }
 
       try {
-        const resposta = await fetch(`${API_URL}/cadastrar`, {
+        const resposta = await fetch(`${API_URL}/api/cadastrar`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -76,7 +76,7 @@
       }
 
       try {
-        const resposta = await fetch(`${API_URL}/login`, {
+        const resposta = await fetch(`${API_URL}/api/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -95,7 +95,7 @@
 
       } catch (erro) {
         console.error(erro);
-        alert("Servidor não está rodando!");
+        alert("Erro ao conectar com o servidor online!");
       }
     }
   </script>
