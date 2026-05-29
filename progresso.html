@@ -28,17 +28,13 @@
       <p>Geral:</p>
 
       <!-- lista de progresso -->
-      <div class="progresso-box" id="listaProgresso">
-
-      </div>
+      <div class="progresso-box" id="listaProgresso"></div>
 
       <br>
 
       <!-- botão voltar -->
       <button class="btn primary" onclick="voltarMenu()">
-
         Voltar para o Menu
-
       </button>
 
     </div>
@@ -48,65 +44,55 @@
 
     // voltar para planejamento
     function voltarMenu() {
-
       window.location.href = "planejamento.html";
-
     }
 
     // carregar progresso
     async function carregarProgresso() {
 
+      const lista = document.getElementById("listaProgresso");
+
       try {
 
-        // buscar tarefas
-        const resposta = await fetch("http://localhost:3000/tarefas");
+        // buscar tarefas no Vercel
+        const resposta = await fetch("/api/tarefas");
+
+        if (!resposta.ok) {
+          throw new Error("Erro ao buscar tarefas");
+        }
 
         // converter json
         const tarefas = await resposta.json();
 
-        // pegar div
-        const lista = document.getElementById("listaProgresso");
-
         // limpar conteúdo
         lista.innerHTML = "<h3>📊 Gráfico de evolução</h3>";
+
+        if (!Array.isArray(tarefas) || tarefas.length === 0) {
+          lista.innerHTML += "<p>Nenhuma tarefa cadastrada.</p>";
+          return;
+        }
 
         // percorrer tarefas
         tarefas.forEach(tarefa => {
 
-          // progresso só muda quando checkbox for marcado
           let progresso = 0;
 
-          // se concluída = true
           if (tarefa.concluida === true) {
-
             progresso = 100;
-
           }
 
-          // adicionar html
           lista.innerHTML += `
 
             <div class="item-progresso">
 
-              <!-- nome da matéria -->
               <span>
-
-                ${tarefa.materia}:
-
+                ${tarefa.materia || "Sem matéria"}:
               </span>
 
-              <!-- barra -->
-              <progress
-                value="${progresso}"
-                max="100"
-              >
-              </progress>
+              <progress value="${progresso}" max="100"></progress>
 
-              <!-- porcentagem -->
               <span>
-
                 ${progresso}%
-
               </span>
 
             </div>
@@ -120,6 +106,8 @@
       } catch (erro) {
 
         console.log("erro:", erro);
+
+        lista.innerHTML = "<p style='color:red;'>Erro ao carregar progresso.</p>";
 
       }
 

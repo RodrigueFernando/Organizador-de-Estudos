@@ -44,20 +44,29 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // TESTE SERVIDOR
-app.get("/", (req, res) => {
+app.get(["/", "/api"], (req, res) => {
   res.json({
     mensagem: "API do Organizador de Estudos funcionando"
   });
 });
 
-app.get("/teste", (req, res) => {
+// HEALTH
+app.get(["/health", "/api/health"], (req, res) => {
+  res.json({
+    status: "ok",
+    mensagem: "Servidor online no Vercel"
+  });
+});
+
+// TESTE
+app.get(["/teste", "/api/teste"], (req, res) => {
   res.json({
     mensagem: "Servidor funcionando"
   });
 });
 
 // TESTE BANCO
-app.get("/teste-banco", async (req, res) => {
+app.get(["/teste-banco", "/api/teste-banco"], async (req, res) => {
   try {
     const resultado = await pool.query("SELECT NOW()");
 
@@ -76,7 +85,7 @@ app.get("/teste-banco", async (req, res) => {
 });
 
 // CADASTRAR USUÁRIO
-app.post("/cadastrar", async (req, res) => {
+app.post(["/cadastrar", "/api/cadastrar"], async (req, res) => {
   const { email, senha } = req.body;
 
   if (!email || !senha) {
@@ -118,7 +127,7 @@ app.post("/cadastrar", async (req, res) => {
 });
 
 // LOGIN
-app.post("/login", async (req, res) => {
+app.post(["/login", "/api/login"], async (req, res) => {
   const { email, senha } = req.body;
 
   if (!email || !senha) {
@@ -156,7 +165,7 @@ app.post("/login", async (req, res) => {
 });
 
 // SALVAR TAREFA
-app.post("/salvar-tarefa", upload.single("pdf"), async (req, res) => {
+app.post(["/salvar-tarefa", "/api/salvar-tarefa"], upload.single("pdf"), async (req, res) => {
   const { materia, topico, dificuldade, dataProva } = req.body;
 
   if (!materia || !topico || !dificuldade || !dataProva) {
@@ -206,7 +215,7 @@ app.post("/salvar-tarefa", upload.single("pdf"), async (req, res) => {
 });
 
 // LISTAR TAREFAS
-app.get("/tarefas", async (req, res) => {
+app.get(["/tarefas", "/api/tarefas"], async (req, res) => {
   try {
     const resultado = await pool.query(
       "SELECT * FROM tarefa ORDER BY id DESC"
@@ -223,7 +232,7 @@ app.get("/tarefas", async (req, res) => {
 });
 
 // ATUALIZAR STATUS
-app.post("/atualizar-tarefa/:id", async (req, res) => {
+app.post(["/atualizar-tarefa/:id", "/api/atualizar-tarefa/:id"], async (req, res) => {
   const { id } = req.params;
   const { concluida } = req.body;
 
@@ -247,7 +256,7 @@ app.post("/atualizar-tarefa/:id", async (req, res) => {
 });
 
 // GERAR SIMULADO COM GEMINI
-app.get("/gerar-simulado", async (req, res) => {
+app.get(["/gerar-simulado", "/api/gerar-simulado"], async (req, res) => {
   try {
     const resultado = await pool.query(`
       SELECT materia, topico, dificuldade
@@ -321,7 +330,7 @@ Regras:
 });
 
 // GERAR QUESTIONÁRIO COM GEMINI
-app.get("/gerar-questionario/:id", async (req, res) => {
+app.get(["/gerar-questionario/:id", "/api/gerar-questionario/:id"], async (req, res) => {
   const { id } = req.params;
 
   try {

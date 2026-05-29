@@ -1,276 +1,148 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <title>Simulado de Prova</title>
+<script>
+  const API_URL = "";
 
-  <link rel="stylesheet" href="./Style/style.css">
+  let perguntas = [];
+  let indiceAtual = 0;
+  let respostas = [];
 
-  <style>
-    body {
-      background: #eef2f5;
-      font-family: Arial, sans-serif;
-    }
+  async function carregarSimulado() {
+    try {
+      document.getElementById("textoPergunta").innerText =
+        "Gerando perguntas com IA...";
 
-    .simulado-card {
-      max-width: 620px;
-      margin: 40px auto;
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.15);
-    }
+      const resposta = await fetch(`${API_URL}/api/gerar-simulado`);
+      const dados = await resposta.json();
 
-    .titulo-simulado {
-      background: #4f9bd8;
-      color: #1d2b38;
-      text-align: center;
-      padding: 16px;
-      border-radius: 8px;
-      font-size: 28px;
-      font-weight: bold;
-    }
-
-    #materia {
-      font-size: 22px;
-      font-weight: bold;
-      margin-top: 25px;
-    }
-
-    #numeroPergunta {
-      font-size: 20px;
-      margin-top: 25px;
-    }
-
-    #textoPergunta {
-      font-size: 22px;
-      font-weight: bold;
-      margin: 25px 0;
-    }
-
-    #alternativas label {
-      display: block;
-      font-size: 20px;
-      margin: 15px 0;
-    }
-
-    #alternativas input {
-      width: 22px;
-      height: 22px;
-      margin-right: 10px;
-    }
-
-    .footer {
-      display: flex;
-      gap: 10px;
-      margin-top: 30px;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      border: none;
-      padding: 14px 18px;
-      border-radius: 10px;
-      color: white;
-      font-size: 17px;
-      cursor: pointer;
-    }
-
-    .anterior {
-      background: #d9634f;
-    }
-
-    .proxima {
-      background: #3478a8;
-      flex: 1;
-    }
-
-    .finalizar {
-      background: #e6b735;
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="simulado-card">
-
-    <div class="titulo-simulado">
-      SIMULADO DE PROVA
-    </div>
-
-    <p id="materia"></p>
-
-    <h3 id="numeroPergunta"></h3>
-
-    <p id="textoPergunta">Carregando simulado...</p>
-
-    <div id="alternativas"></div>
-
-    <div class="footer">
-      <button class="btn anterior" onclick="perguntaAnterior()">
-        Anterior
-      </button>
-
-      <button class="btn proxima" onclick="proximaPergunta()">
-        Próxima Pergunta
-      </button>
-
-      <button class="btn finalizar" onclick="finalizarSimulado()">
-        Finalizar
-      </button>
-    </div>
-
-  </div>
-
-  <script>
-    const API_URL = "http://localhost:3000";
-
-    let perguntas = [];
-    let indiceAtual = 0;
-    let respostas = [];
-
-    async function carregarSimulado() {
-      try {
+      if (
+        dados.mensagem &&
+        (
+          dados.mensagem.includes("quota") ||
+          dados.mensagem.includes("429") ||
+          dados.mensagem.includes("Too Many Requests")
+        )
+      ) {
         document.getElementById("textoPergunta").innerText =
-          "Gerando perguntas com IA...";
-
-        const resposta = await fetch(`${API_URL}/gerar-simulado`);
-        const dados = await resposta.json();
-
-        if (
-          dados.mensagem &&
-          (
-            dados.mensagem.includes("quota") ||
-            dados.mensagem.includes("429") ||
-            dados.mensagem.includes("Too Many Requests")
-          )
-        ) {
-          document.getElementById("textoPergunta").innerText =
-            "Limite gratuito da IA atingido. Tente novamente mais tarde.";
-          return;
-        }
-
-        if (!dados.sucesso) {
-          document.getElementById("textoPergunta").innerText =
-            dados.mensagem || "Erro ao gerar simulado.";
-          return;
-        }
-
-        perguntas = dados.perguntas;
-
-        if (!Array.isArray(perguntas) || perguntas.length === 0) {
-          document.getElementById("textoPergunta").innerText =
-            "Nenhuma pergunta foi gerada.";
-          return;
-        }
-
-        if (perguntas.length > 10) {
-          perguntas = perguntas.slice(0, 10);
-        }
-
-        mostrarPergunta();
-
-      } catch (erro) {
-        console.error(erro);
-
-        document.getElementById("textoPergunta").innerText =
-          "Erro ao gerar simulado.";
-      }
-    }
-
-    function mostrarPergunta() {
-      const pergunta = perguntas[indiceAtual];
-
-      if (!pergunta) {
-        document.getElementById("textoPergunta").innerText =
-          "Pergunta não encontrada.";
+          "Limite gratuito da IA atingido. Tente novamente mais tarde.";
         return;
       }
 
-      document.getElementById("materia").innerText =
-        "Matéria: " + (pergunta.materia || "Matéria");
+      if (!dados.sucesso) {
+        document.getElementById("textoPergunta").innerText =
+          dados.mensagem || "Erro ao gerar simulado.";
+        return;
+      }
 
-      document.getElementById("numeroPergunta").innerText =
-        `Pergunta ${indiceAtual + 1} de ${perguntas.length}`;
+      perguntas = dados.perguntas;
+
+      if (!Array.isArray(perguntas) || perguntas.length === 0) {
+        document.getElementById("textoPergunta").innerText =
+          "Nenhuma pergunta foi gerada.";
+        return;
+      }
+
+      if (perguntas.length > 10) {
+        perguntas = perguntas.slice(0, 10);
+      }
+
+      mostrarPergunta();
+
+    } catch (erro) {
+      console.error(erro);
 
       document.getElementById("textoPergunta").innerText =
-        pergunta.pergunta;
+        "Erro ao gerar simulado.";
+    }
+  }
 
-      const divAlternativas =
-        document.getElementById("alternativas");
+  function mostrarPergunta() {
+    const pergunta = perguntas[indiceAtual];
 
-      divAlternativas.innerHTML = "";
-
-      pergunta.alternativas.forEach((alternativa, index) => {
-        divAlternativas.innerHTML += `
-          <label>
-            <input
-              type="radio"
-              name="resposta"
-              value="${index}"
-              ${respostas[indiceAtual] == index ? "checked" : ""}
-              onchange="salvarResposta(${index})"
-            >
-            ${alternativa}
-          </label>
-        `;
-      });
+    if (!pergunta) {
+      document.getElementById("textoPergunta").innerText =
+        "Pergunta não encontrada.";
+      return;
     }
 
-    function salvarResposta(index) {
-      respostas[indiceAtual] = index;
+    document.getElementById("materia").innerText =
+      "Matéria: " + (pergunta.materia || "Matéria");
 
-      const respondidas =
-        respostas.filter(r => r !== undefined).length;
+    document.getElementById("numeroPergunta").innerText =
+      `Pergunta ${indiceAtual + 1} de ${perguntas.length}`;
 
+    document.getElementById("textoPergunta").innerText =
+      pergunta.pergunta;
+
+    const divAlternativas =
+      document.getElementById("alternativas");
+
+    divAlternativas.innerHTML = "";
+
+    pergunta.alternativas.forEach((alternativa, index) => {
+      divAlternativas.innerHTML += `
+        <label>
+          <input
+            type="radio"
+            name="resposta"
+            value="${index}"
+            ${respostas[indiceAtual] == index ? "checked" : ""}
+            onchange="salvarResposta(${index})"
+          >
+          ${alternativa}
+        </label>
+      `;
+    });
+  }
+
+  function salvarResposta(index) {
+    respostas[indiceAtual] = index;
+
+    const respondidas =
+      respostas.filter(r => r !== undefined).length;
+
+    if (
+      perguntas.length === 10 &&
+      indiceAtual === perguntas.length - 1 &&
+      respondidas === perguntas.length
+    ) {
+      setTimeout(() => {
+        finalizarSimulado();
+      }, 500);
+    }
+  }
+
+  function proximaPergunta() {
+    if (indiceAtual < perguntas.length - 1) {
+      indiceAtual++;
+      mostrarPergunta();
+    }
+  }
+
+  function perguntaAnterior() {
+    if (indiceAtual > 0) {
+      indiceAtual--;
+      mostrarPergunta();
+    }
+  }
+
+  function finalizarSimulado() {
+    let acertos = 0;
+
+    perguntas.forEach((pergunta, index) => {
       if (
-        perguntas.length === 10 &&
-        indiceAtual === perguntas.length - 1 &&
-        respondidas === perguntas.length
+        Number(respostas[index]) ===
+        Number(pergunta.correta)
       ) {
-        setTimeout(() => {
-          finalizarSimulado();
-        }, 500);
+        acertos++;
       }
-    }
+    });
 
-    function proximaPergunta() {
-      if (indiceAtual < perguntas.length - 1) {
-        indiceAtual++;
-        mostrarPergunta();
-      }
-    }
+    const respondidas =
+      respostas.filter(r => r !== undefined).length;
 
-    function perguntaAnterior() {
-      if (indiceAtual > 0) {
-        indiceAtual--;
-        mostrarPergunta();
-      }
-    }
+    alert(`Você acertou ${acertos} de ${respondidas} perguntas.`);
 
-    function finalizarSimulado() {
-      let acertos = 0;
+    window.location.href = "planejamento.html";
+  }
 
-      perguntas.forEach((pergunta, index) => {
-        if (
-          Number(respostas[index]) ===
-          Number(pergunta.correta)
-        ) {
-          acertos++;
-        }
-      });
-
-      const respondidas =
-        respostas.filter(r => r !== undefined).length;
-
-      alert(`Você acertou ${acertos} de ${respondidas} perguntas.`);
-
-      window.location.href = "planejamento.html";
-    }
-
-    carregarSimulado();
-  </script>
-
-</body>
-</html>
+  carregarSimulado();
+</script>

@@ -34,7 +34,7 @@
   </div>
 
   <script>
-    const API_URL = "http://localhost:3000";
+    const API_URL = "";
 
     function adicionarTarefa() {
       window.location.href = "tarefa.html";
@@ -50,7 +50,7 @@
 
     async function carregarTarefas() {
       try {
-        const resposta = await fetch(`${API_URL}/tarefas`);
+        const resposta = await fetch(`${API_URL}/api/tarefas`);
         const tarefas = await resposta.json();
 
         const lista = document.getElementById("listaTarefas");
@@ -84,7 +84,7 @@
 
               ${
                 tarefa.pdf
-                  ? `<a href="${API_URL}/uploads/${tarefa.pdf}" target="_blank">Abrir PDF</a>`
+                  ? `<a href="${API_URL}/api/uploads/${tarefa.pdf}" target="_blank">Abrir PDF</a>`
                   : `<span>Sem PDF</span>`
               }
             </div>
@@ -100,7 +100,7 @@
 
     async function alterarStatus(id, concluida) {
       try {
-        const resposta = await fetch(`${API_URL}/atualizar-tarefa/${id}`, {
+        const resposta = await fetch(`${API_URL}/api/atualizar-tarefa/${id}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"

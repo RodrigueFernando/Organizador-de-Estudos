@@ -4,10 +4,9 @@
   <meta charset="UTF-8">
   <title>Questionário</title>
 
-   <link rel="stylesheet" href="./Style/style.css">
- 
-  <style>
+  <link rel="stylesheet" href="./Style/style.css">
 
+  <style>
     body {
       background: #eef2f5;
       font-family: Arial, sans-serif;
@@ -93,7 +92,6 @@
       font-weight: bold;
       margin-top: 20px;
     }
-
   </style>
 </head>
 
@@ -106,13 +104,11 @@
     </div>
 
     <div class="topico-box">
-
       <strong>Tópico finalizado:</strong>
 
       <p id="topicoFinalizado">
         Carregando...
       </p>
-
     </div>
 
     <p id="pergunta">
@@ -134,26 +130,20 @@
   </div>
 
   <script>
-
-    const API_URL = "http://localhost:3000";
+    const API_URL = "";
 
     let perguntaAtual = null;
-
     let respostaSelecionada = null;
 
     // PEGAR ID DA URL
     const params = new URLSearchParams(window.location.search);
-
     const tarefaId = params.get("id");
 
     // CARREGAR QUESTIONÁRIO
     async function carregarQuestionario() {
-
       try {
-
         // SEM ID
         if (!tarefaId) {
-
           document.getElementById("topicoFinalizado").innerText =
             "Nenhuma tarefa selecionada.";
 
@@ -161,19 +151,21 @@
             "Volte ao planejamento e marque uma tarefa como concluída.";
 
           return;
-
         }
 
-        // CHAMAR API
+        // CHAMAR API NO VERCEL
         const resposta = await fetch(
-          `${API_URL}/gerar-questionario/${tarefaId}`
+          `${API_URL}/api/gerar-questionario/${tarefaId}`
         );
+
+        if (!resposta.ok) {
+          throw new Error("Erro ao buscar questionário");
+        }
 
         const dados = await resposta.json();
 
         // ERRO API
         if (!dados.sucesso) {
-
           document.getElementById("topicoFinalizado").innerText =
             "Erro ao carregar tópico.";
 
@@ -186,19 +178,16 @@
               dados.mensagem.includes("Too Many Requests")
             )
           ) {
-
             document.getElementById("pergunta").innerText =
               "Limite gratuito da IA atingido. Tente novamente mais tarde.";
 
             return;
-
           }
 
           document.getElementById("pergunta").innerText =
             dados.mensagem || "Erro ao gerar pergunta.";
 
           return;
-
         }
 
         // SALVAR PERGUNTA
@@ -212,22 +201,18 @@
         mostrarPergunta();
 
       } catch (erro) {
-
-        console.error(erro);
+        console.error("Erro ao carregar questionário:", erro);
 
         document.getElementById("topicoFinalizado").innerText =
           "Erro.";
 
         document.getElementById("pergunta").innerText =
           "Erro ao carregar questionário.";
-
       }
-
     }
 
     // MOSTRAR PERGUNTA
     function mostrarPergunta() {
-
       if (!perguntaAtual) {
         return;
       }
@@ -242,11 +227,8 @@
 
       // ALTERNATIVAS
       perguntaAtual.alternativas.forEach((alternativa, index) => {
-
         divAlternativas.innerHTML += `
-
           <label>
-
             <input
               type="radio"
               name="alternativa"
@@ -255,82 +237,49 @@
             >
 
             ${alternativa}
-
           </label>
-
         `;
-
       });
-
     }
 
     // SALVAR RESPOSTA
     function selecionarResposta(index) {
-
       respostaSelecionada = index;
-
     }
 
     // RESPONDER
     function responder() {
-
-      // NÃO CARREGOU
       if (!perguntaAtual) {
-
         alert("A pergunta ainda não foi carregada.");
-
         return;
-
       }
 
-      // NÃO ESCOLHEU
       if (respostaSelecionada === null) {
-
         alert("Selecione uma alternativa!");
-
         return;
-
       }
 
-      const resultado =
-        document.getElementById("resultado");
+      const resultado = document.getElementById("resultado");
 
-      // ACERTOU
       if (
         Number(respostaSelecionada) ===
         Number(perguntaAtual.correta)
       ) {
-
         resultado.style.color = "green";
-
-        resultado.innerText =
-          "Resposta correta!";
-
-      }
-
-      // ERROU
-      else {
-
+        resultado.innerText = "Resposta correta!";
+      } else {
         resultado.style.color = "red";
-
-        resultado.innerText =
-          "Resposta incorreta. Revise o tópico.";
-
+        resultado.innerText = "Resposta incorreta. Revise o tópico.";
       }
-
     }
 
     // VOLTAR
     function voltar() {
-
-      window.location.href =
-        "planejamento.html";
-
+      window.location.href = "planejamento.html";
     }
 
     // INICIAR
     carregarQuestionario();
-
   </script>
 
 </body>
