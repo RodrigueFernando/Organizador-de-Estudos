@@ -7,31 +7,54 @@ const path = require("path");
 
 const app = express();
 
-app.use(cors());
+// middleware
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "https://organizador-de-estudos-ucy2.vercel.app"
+  ]
+}));
+
 app.use(express.json());
 
-// SERVIR ARQUIVOS HTML, CSS E JS DA PASTA RAIZ
+// arquivos estáticos (frontend)
 app.use(express.static(path.join(__dirname, "..")));
 
-const upload = multer({
-  dest: "uploads/"
+// cloudinary
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+
+// config cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// PÁGINA INICIAL
+// storage cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "tarefas",
+    resource_type: "auto",
+  },
+});
+
+const upload = multer({ storage });
+
+// rota principal
 app.get("/", (req, res) => {
-  res.sendFile(
-    path.join(__dirname, "..", "index.html")
-  );
+  res.sendFile(path.join(__dirname, "..", "index.html"));
 });
 
-// API
+// teste api
 app.get("/api", (req, res) => {
   res.json({
     mensagem: "API funcionando"
   });
 });
 
-// HEALTH
+// health check
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
@@ -39,7 +62,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// TESTE POST
+// teste post
 app.post("/api/teste-post", (req, res) => {
   console.log(req.body);
 
@@ -49,28 +72,30 @@ app.post("/api/teste-post", (req, res) => {
   });
 });
 
-// SALVAR TAREFA
-app.post(
-  "/api/salvar-tarefa",
-  upload.single("pdf"),
-  (req, res) => {
+// salvar tarefa (upload pdf cloudinary)
+app.post("/api/salvar-tarefa", upload.single("pdf"), (req, res) => {
 
-    console.log("BODY:");
-    console.log(req.body);
+  console.log("BODY:", req.body);
+  console.log("FILE:", req.file);
 
-    console.log("FILE:");
-    console.log(req.file);
-
-    res.json({
-      sucesso: true,
-      mensagem: "Tarefa recebida com sucesso"
+  if (!req.file) {
+    return res.status(400).json({
+      sucesso: false,
+      mensagem: "PDF não enviado"
     });
   }
-);
 
+  res.json({
+    sucesso: true,
+    mensagem: "Tarefa recebida com sucesso",
+    fileUrl: req.file.path
+  });
+});
+
+// listar tarefas (desativado por enquanto)
+/*
 app.get("/api/tarefas", async (req, res) => {
   try {
-
     const resultado = await pool.query(
       "SELECT * FROM tarefa ORDER BY id DESC"
     );
@@ -78,24 +103,20 @@ app.get("/api/tarefas", async (req, res) => {
     res.json(resultado.rows);
 
   } catch (erro) {
-
-    console.error(erro);
-
     res.status(500).json({
       sucesso: false,
       mensagem: erro.message
     });
   }
 });
+*/
 
-// RODAR LOCALMENTE
+// servidor local
 if (process.env.NODE_ENV !== "production") {
   app.listen(3000, () => {
     console.log("Servidor rodando em http://localhost:3000");
   });
 }
 
-
-
-// VERCEL
+// export vercel
 module.exports = app;

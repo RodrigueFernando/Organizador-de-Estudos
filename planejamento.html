@@ -5,10 +5,9 @@
   <title>Planejamento</title>
 
   <link rel="stylesheet" href="./Style/style.css">
+</head>
 
-  
-
- <body>
+<body>
   <div class="container">
     <div class="card">
       <h2>PLANEJAMENTO DE ESTUDOS</h2>
@@ -84,7 +83,7 @@
 
               ${
                 tarefa.pdf
-                  ? `<a href="${API_URL}/api/uploads/${tarefa.pdf}" target="_blank">Abrir PDF</a>`
+                  ? `<a href="${tarefa.pdf}" target="_blank">Abrir PDF</a>`
                   : `<span>Sem PDF</span>`
               }
             </div>
