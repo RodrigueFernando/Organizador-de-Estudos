@@ -59,63 +59,78 @@
   </div>
 
   <script>
-    const API_URL = "https://organizador-de-estudos-ucy2.vercel.app";
+ const API_URL = "https://organizador-de-estudos-ucy2.vercel.app";
 
-    
-  </script>
+ async function salvarTarefa() {
 
-  <script>
-  async function salvarTarefa() {
-    const materia = document.getElementById("materia").value.trim();
-    const topico = document.getElementById("topico").value.trim();
-    const dificuldade = document.getElementById("dificuldade").value.trim();
-    const dataProva = document.getElementById("dataProva").value;
-    const pdf = document.getElementById("pdf").files[0];
+  const materia = document.getElementById("materia").value.trim();
+  const topico = document.getElementById("topico").value.trim();
+  const dificuldade = document.getElementById("dificuldade").value.trim();
+  const dataProva = document.getElementById("dataProva").value;
+  const pdf = document.getElementById("pdf").files[0];
 
-    if (!materia || !topico || !dificuldade || !dataProva) {
-      alert("Preencha todos os campos!");
-      return;
-    }
-
-    if (!pdf) {
-      alert("Selecione um arquivo PDF!");
-      return;
-    }
-
-    const leitor = new FileReader();
-
-    leitor.onload = function () {
-      const tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
-
-      const novaTarefa = {
-        id: Date.now(),
-        materia: materia,
-        topico: topico,
-        dificuldade: dificuldade,
-        dataProva: dataProva,
-        concluida: false,
-        pdfNome: pdf.name,
-        pdfBase64: leitor.result
-      };
-
-      tarefas.push(novaTarefa);
-
-      localStorage.setItem("tarefas", JSON.stringify(tarefas));
-
-      alert("Tarefa salva com sucesso!");
-      window.location.href = "planejamento.html";
-    };
-
-    leitor.readAsDataURL(pdf);
+  if (!materia || !topico || !dificuldade || !dataProva || !pdf) {
+    alert("Preencha todos os campos!");
+    return;
   }
 
-  function editarTarefa() {
-    alert("Agora você pode editar os campos.");
-  }
+  const formData = new FormData();
 
-  function voltar() {
+  formData.append("materia", materia);
+  formData.append("topico", topico);
+  formData.append("dificuldade", dificuldade);
+  formData.append("dataProva", dataProva);
+  formData.append("pdf", pdf);
+
+  console.log("========== ENVIANDO ==========");
+  console.log("Matéria:", materia);
+  console.log("Tópico:", topico);
+  console.log("Dificuldade:", dificuldade);
+  console.log("Data:", dataProva);
+  console.log("PDF:", pdf.name);
+  console.log("URL:", `${API_URL}/api/salvar-tarefa`);
+
+  try {
+
+    const resposta = await fetch(
+      `${API_URL}/api/salvar-tarefa`,
+      {
+        method: "POST",
+        body: formData
+      }
+    );
+
+    console.log("Status HTTP:", resposta.status);
+
+    const texto = await resposta.text();
+
+    console.log("Resposta do servidor:");
+    console.log(texto);
+
+    if (!resposta.ok) {
+      throw new Error(texto);
+    }
+
+    alert("Tarefa salva com sucesso!");
+
     window.location.href = "planejamento.html";
+
+  } catch (erro) {
+
+    console.error("ERRO COMPLETO:");
+    console.error(erro);
+
+    alert("Erro ao salvar tarefa.");
   }
+}
+
+function editarTarefa() {
+  alert("Agora você pode editar os campos.");
+}
+
+function voltar() {
+  window.location.href = "planejamento.html";
+}
 </script>
 
 </body>
