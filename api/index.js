@@ -31,6 +31,11 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// teste rápido 
+cloudinary.api.ping()
+  .then(res => console.log("Cloudinary OK:", res))
+  .catch(err => console.error("Cloudinary erro:", err));
+
 // storage cloudinary
 const storage = new CloudinaryStorage({
   cloudinary,
