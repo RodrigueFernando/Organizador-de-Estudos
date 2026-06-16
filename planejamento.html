@@ -33,8 +33,10 @@
   </div>
 
   <script>
-    const API_URL = "https://organizador-de-estudos-ucy2.vercel.app";
-
+    //const API_URL = "https://organizador-de-estudos-ucy2.vercel.app";
+    const API_URL = "http://localhost:3000";
+      console.log("Hostname:", window.location.hostname);
+     console.log("API_URL:", API_URL);
     function adicionarTarefa() {
       window.location.href = "tarefa.html";
     }
@@ -47,55 +49,94 @@
       window.location.href = "simulado.html";
     }
 
-    async function carregarTarefas() {
-      try {
-        const resposta = await fetch(`${API_URL}/api/tarefas`);
-        const tarefas = await resposta.json();
+async function carregarTarefas() {
+  
+  try {
+    
+    console.log("carregarTarefas executou");
+    const resposta = await fetch(`${API_URL}/api/tarefas`);
 
-        const lista = document.getElementById("listaTarefas");
-        lista.innerHTML = "";
+    console.log("Status da resposta:", resposta.status);
 
-        if (!Array.isArray(tarefas) || tarefas.length === 0) {
-          lista.innerHTML = "<p>Nenhuma tarefa cadastrada.</p>";
-          return;
-        }
+    const tarefas = await resposta.json();
 
-        tarefas.forEach((tarefa) => {
-          lista.innerHTML += `
-            <div>
-              <label>
-                <input
-                  type="checkbox"
-                  ${tarefa.concluida ? "checked" : ""}
-                  onchange="alterarStatus(${tarefa.id}, this.checked)"
-                >
+    // TESTE 1
+    console.log("Tarefas recebidas:", tarefas);
 
-                <span style="
-                  text-decoration: ${tarefa.concluida ? "line-through" : "none"};
-                  color: ${tarefa.concluida ? "green" : "black"};
-                  font-size: 22px;
-                ">
-                  ${tarefa.materia || "Sem matéria"} - ${tarefa.topico || tarefa.titulo}
-                </span>
-              </label>
+    const lista = document.getElementById("listaTarefas");
 
-              <br><br>
+    // TESTE 2
+    console.log("Elemento lista:", lista);
 
-              ${
-                tarefa.pdf
-                  ? `<a href="${tarefa.pdf}" target="_blank">Abrir PDF</a>`
-                  : `<span>Sem PDF</span>`
-              }
-            </div>
-          `;
-        });
+    lista.innerHTML = "";
 
-      } catch (erro) {
-        console.error("Erro ao carregar tarefas:", erro);
-        document.getElementById("listaTarefas").innerHTML =
-          "<p>Erro ao carregar tarefas.</p>";
-      }
+    if (!Array.isArray(tarefas) || tarefas.length === 0) {
+      console.log("Nenhuma tarefa encontrada.");
+
+      lista.innerHTML = "<p>Nenhuma tarefa cadastrada.</p>";
+      return;
     }
+
+tarefas.forEach((tarefa) => {
+  console.log("Renderizando tarefa:", tarefa);
+
+  // CORREÇÃO DO LINK DO PDF:
+  let urlPdf = "#";
+  if (tarefa.pdf) {
+    // Se o texto já começar com http (Cloudinary), usa ele direto.
+    // Se não, junta com o endereço do seu servidor local.
+    urlPdf = tarefa.pdf.startsWith("http") 
+      ? tarefa.pdf 
+      : `${API_URL}/uploads/${tarefa.pdf}`;
+  }
+
+  const linkPdf = tarefa.pdf 
+    ? `<a href="${urlPdf}" target="_blank">Abrir PDF</a>` 
+    : `<span>Sem PDF</span>`;
+
+  lista.innerHTML += `
+    <div style="padding:20px; border-bottom:1px solid #ccc;">
+
+      <label style="display:flex; align-items:center; gap:10px;">
+
+        <input
+          type="checkbox"
+          ${tarefa.concluida ? "checked" : ""}
+          onchange="alterarStatus(${tarefa.id}, this.checked)"
+          style="width:20px; height:20px;"
+        >
+
+        <span style="
+          text-decoration: ${tarefa.concluida ? "line-through" : "none"};
+          color: ${tarefa.concluida ? "green" : "black"};
+          font-size: 22px;
+        ">
+          ${tarefa.materia || "Sem matéria"} -
+          ${tarefa.topico || tarefa.titulo || "Sem título"}
+        </span>
+
+      </label>
+
+      <br>
+
+      ${linkPdf}
+
+    </div>
+  `;
+});
+
+console.log("lista.innerHTML final:", lista.innerHTML);
+
+    // TESTE 4
+    console.log("HTML gerado:", lista.innerHTML);
+
+  } catch (erro) {
+    console.error("Erro ao carregar tarefas:", erro);
+
+    document.getElementById("listaTarefas").innerHTML =
+      "<p>Erro ao carregar tarefas.</p>";
+  }
+}
 
     async function alterarStatus(id, concluida) {
       try {
