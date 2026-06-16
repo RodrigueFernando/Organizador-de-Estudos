@@ -1,6 +1,6 @@
 -- USUARIO
-INSERT INTO usuario (id, nome, email) VALUES
-(1, 'João', 'joao@email.com');
+INSERT INTO usuario (id,email,senha) VALUES
+(1, '1', 'joao@email.com');
 
 -- PLANEJAMENTO DE ESTUDO
 INSERT INTO planejamento_de_estudo (id, prazo, usuario_id) VALUES

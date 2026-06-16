@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
+const { Pool } = require("pg");
 
 const app = express();
 
@@ -46,6 +47,21 @@ const storage = new CloudinaryStorage({
 });
 
 const upload = multer({ storage });
+
+cloudinary.api.ping()
+  .then(res => console.log("Cloudinary OK:", res))
+  .catch(err => console.error("Cloudinary erro:", err));
+
+
+// CONEXÃO COM O NEON
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: true
+});
+
+pool.query("SELECT NOW()")
+  .then(() => console.log("Neon PostgreSQL conectado!"))
+  .catch(err => console.error("Erro banco:", err.message));
 
 // rota principal
 app.get("/", (req, res) => {
@@ -123,5 +139,94 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
+
+// =========================
+// CADASTRAR USUÁRIO
+// =========================
+
+app.post("/api/cadastrar", async (req, res) => {
+  const { email, senha } = req.body;
+
+  if (!email || !senha) {
+    return res.status(400).json({
+      sucesso: false,
+      mensagem: "Preencha todos os campos."
+    });
+  }
+
+  try {
+    const usuarioExistente = await pool.query(
+      "SELECT id FROM usuario WHERE email = $1",
+      [email]
+    );
+
+    if (usuarioExistente.rows.length > 0) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: "E-mail já cadastrado."
+      });
+    }
+
+    await pool.query(
+      "INSERT INTO usuario (email, senha) VALUES ($1, $2)",
+      [email, senha]
+    );
+
+    res.json({
+      sucesso: true,
+      mensagem: "Usuário cadastrado com sucesso!"
+    });
+
+  } catch (erro) {
+    console.error("Erro cadastro:", erro);
+
+    res.status(500).json({
+      sucesso: false,
+      mensagem: "Erro ao cadastrar usuário."
+    });
+  }
+});
+
+
+// LOGIN
+
+
+app.post("/api/login", async (req, res) => {
+  const { email, senha } = req.body;
+
+  if (!email || !senha) {
+    return res.status(400).json({
+      sucesso: false,
+      mensagem: "Preencha todos os campos."
+    });
+  }
+
+  try {
+    const resultado = await pool.query(
+      "SELECT * FROM usuario WHERE email = $1 AND senha = $2",
+      [email, senha]
+    );
+
+    if (resultado.rows.length === 0) {
+      return res.status(401).json({
+        sucesso: false,
+        mensagem: "E-mail ou senha inválidos."
+      });
+    }
+
+    res.json({
+      sucesso: true,
+      mensagem: "Login realizado com sucesso!"
+    });
+
+  } catch (erro) {
+    console.error("Erro login:", erro);
+
+    res.status(500).json({
+      sucesso: false,
+      mensagem: "Erro ao realizar login."
+    });
+  }
+});
 // export vercel
 module.exports = app;

@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Cadastro</title>
 
   <link rel="stylesheet" href="./Style/style.css">
 </head>
@@ -11,7 +11,7 @@
 
   <div class="container">
     <div class="card">
-      <h2>ORGANIZADOR DE ESTUDOS</h2>
+      <h2>CADASTRO</h2>
 
       <div class="form-group">
         <label>Email:</label>
@@ -23,25 +23,23 @@
         <input type="password" id="senha" placeholder="Digite sua senha">
       </div>
 
-      <a href="#" class="link">Esqueci minha senha</a>
-
       <div class="footer">
-        <button type="button" class="btn primary" onclick="entrar()">
-          Entrar
+        <button type="button" class="btn primary" onclick="cadastrar()">
+          Cadastrar
         </button>
 
         <button type="button" class="btn outline"
-                onclick="window.location.href='./cadastro.html'">
-          Cadastrar
+                onclick="window.location.href='./index.html'">
+          Voltar
         </button>
       </div>
     </div>
   </div>
 
   <script>
-    const API_URL = "http://localhost:3000";
+    const API_URL = "";
 
-    async function entrar() {
+    async function cadastrar() {
       const email = document.getElementById("email").value.trim();
       const senha = document.getElementById("senha").value.trim();
 
@@ -51,7 +49,7 @@
       }
 
       try {
-        const resposta = await fetch(`${API_URL}/api/login`, {
+        const resposta = await fetch(`${API_URL}/api/cadastrar`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -59,26 +57,18 @@
           body: JSON.stringify({ email, senha })
         });
 
-        // verifica se a rota existe
-      if (!resposta.ok) {
-        const dadosErro = await resposta.json();
-
-       alert(dadosErro.mensagem || "Erro ao realizar login.");
-       return;
-      }
-
-      const dados = await resposta.json();
+        const dados = await resposta.json();
 
         if (dados.sucesso) {
-          alert("Login realizado com sucesso!");
-          window.location.href = "./planejamento.html";
+          alert("Cadastro realizado com sucesso!");
+          window.location.href = "./index.html";
         } else {
-          alert(dados.mensagem || "E-mail ou senha inválidos.");
+          alert(dados.mensagem);
         }
 
       } catch (erro) {
         console.error(erro);
-        alert("Erro ao conectar com o servidor.");
+        alert("Erro ao conectar com o servidor!");
       }
     }
   </script>
