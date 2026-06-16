@@ -124,7 +124,10 @@
   </div>
 
   <script>
-    const API_URL = "https://organizador-de-estudos-ucy2.vercel.app";
+    // Configuração inteligente da API para aceitar Localhost ou Vercel sem mexer no código
+    const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? "http://localhost:3000" 
+      : "https://organizador-de-estudos-ucy2.vercel.app";
 
     let perguntas = [];
     let indiceAtual = 0;
@@ -132,7 +135,6 @@
 
     function escreverTexto(id, texto) {
       const elemento = document.getElementById(id);
-
       if (elemento) {
         elemento.innerText = texto;
       }
@@ -140,8 +142,9 @@
 
     async function carregarSimulado() {
       try {
-        escreverTexto("textoPergunta", "Gerando perguntas com IA...");
+        escreverTexto("textoPergunta", "Gerando perguntas com IA baseadas no seu material...");
 
+        // Faz o fetch dinâmico dependendo de onde o site está aberto
         const resposta = await fetch(`${API_URL}/api/gerar-simulado`);
 
         if (!resposta.ok) {

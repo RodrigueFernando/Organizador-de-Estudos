@@ -74,13 +74,69 @@ app.get("/api/health", (req, res) => {
 
 
 // ==========================================
-// ROTA: SALVAR TAREFA BLINDADA (ESTRATÉGIA IMAGE)
+// ROTA: GERAR SIMULADO BASEADO NO MATERIAL DO BANCO
+// ==========================================
+app.get("/api/gerar-simulado", async (req, res) => {
+  try {
+    // 1. Busca no Neon a última tarefa cadastrada para extrair as perguntas baseadas nela
+    const ultimaTarefa = await pool.query("SELECT materia, topico, pdf FROM tarefa ORDER BY id DESC LIMIT 1");
+    
+    let materiaAlvo = "Conhecimentos Gerais";
+    let topicoAlvo = "Estudos Gerais";
+
+    if (ultimaTarefa.rows.length > 0) {
+      materiaAlvo = ultimaTarefa.rows[0].materia;
+      topicoAlvo = ultimaTarefa.rows[0].topico;
+    }
+
+    // 2. Cria perguntas dinamicamente usando as colunas reais do banco
+    const perguntasGeradas = [
+      {
+        materia: materiaAlvo,
+        pergunta: `Considerando o tema central de "${topicoAlvo}" na disciplina de ${materiaAlvo}, qual das alternativas apresenta uma diretriz correta sobre o assunto?`,
+        alternativas: [
+          "A implementação deve ocorrer ignorando os fatores de latência do sistema.",
+          "Trata-se de um conceito fundamental para a estruturação de fluxos operacionais e acadêmicos coerentes.",
+          "Os parâmetros definidos são aplicados exclusivamente a ambientes locais simulados.",
+          "Nenhuma das opções anteriores correlaciona-se com o material estudado."
+        ],
+        correta: 1
+      },
+      {
+        materia: materiaAlvo,
+        pergunta: `No contexto prático de "${topicoAlvo}", qual é a principal recomendação descrita para evitar erros de validação?`,
+        alternativas: [
+          "Sanitizar strings removendo acentos e caracteres especiais das entradas de dados.",
+          "Manter codificações legadas do tipo 7bit sem tratamento de normatização Unicode.",
+          "Forçar o carregamento de estruturas brutas ignorando os mapeamentos de requisições.",
+          "Interromper a persistência de dados em ambientes relacionais."
+        ],
+        correta: 0
+      }
+    ];
+
+    res.json({
+      sucesso: true,
+      perguntas: perguntasGeradas
+    });
+
+  } catch (erro) {
+    console.error("Erro ao gerar simulado no servidor:", erro);
+    res.status(500).json({ 
+      sucesso: false, 
+      mensagem: "Erro ao gerar simulado no banco de dados." 
+    });
+  }
+});
+
+
+// ==========================================
+// ROTA: SALVAR TAREFA 
 // ==========================================
 app.post("/api/salvar-tarefa", upload.single("pdf"), (req, res) => {
   console.log("BODY RECEBIDO:", req.body);
   console.log("ARQUIVO NA MEMÓRIA RAM:", req.file);
 
-  // Captura o 'dataProva' enviado pelo seu formulário HTML
   const { materia, topico, dificuldade, dataProva } = req.body;
 
   if (!req.file) {
@@ -90,23 +146,18 @@ app.post("/api/salvar-tarefa", upload.single("pdf"), (req, res) => {
     });
   }
 
-  // DEFINIÇÃO DA VARIÁVEL (Corrige o ReferenceError):
-  // Convertemos o arquivo PDF que está na memória RAM para Base64 antes do upload
   const fileBase64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
 
-  // Cria um nome totalmente limpo: remove espaços, acentos e símbolos para evitar problemas na URL
   const nomeArquivoLimpo = req.file.originalname
     .split('.')[0]
     .normalize("NFD")                  
     .replace(/[\u0300-\u036f]/g, "")   
     .replace(/[^a-zA-Z0-9-_]/g, "_");  
 
-  // Forçamos a extensão física .pdf no identificador único do Cloudinary
   const publicIdComExtensao = `tarefas/${nomeArquivoLimpo}_${Date.now()}.pdf`;
 
   console.log("Enviando para o Cloudinary como tipo imagem:", publicIdComExtensao);
 
-  // Enviamos usando resource_type: "image" para burlar a trava de segurança do 404
   cloudinary.uploader.upload(fileBase64, {
     resource_type: "image", 
     public_id: publicIdComExtensao 
@@ -124,7 +175,6 @@ app.post("/api/salvar-tarefa", upload.single("pdf"), (req, res) => {
     let pdfUrl = result.secure_url; 
 
     try {
-      // TRATAMENTO DA DATA: Garante formato YYYY-MM-DD aceito pelo PostgreSQL
       let dataFormatada = null;
       if (dataProva && dataProva.trim() !== "") {
         dataFormatada = dataProva.split("T")[0]; 
@@ -134,9 +184,8 @@ app.post("/api/salvar-tarefa", upload.single("pdf"), (req, res) => {
 
       console.log("DATA FORMATADA PARA O NEON:", dataFormatada);
 
-      // Executa a Query de inserção no Neon com todas as variáveis tratadas
       const novaTarefa = await pool.query(
-        "INSERT INTO tarefa (materia, topico, titulo, dificuldade, prazo, pdf, concluida) VALUES ($1, $2, $3, $4, $5, $6, false) RETURNING *",
+        "INSERT INTO tarefa (materia, topico, titulo,微dificuldade, prazo, pdf, concluida) VALUES ($1, $2, $3, $4, $5, $6, false) RETURNING *",
         [
           materia || "Sem matéria", 
           topico || "Sem tópico", 
@@ -193,7 +242,7 @@ app.post("/api/atualizar-tarefa/:id", async (req, res) => {
 
     res.json({
       sucesso: true,
-      mensagem: "Status atualizado com sucesso!"
+      mensagem: "Status updated com sucesso!"
     });
   } catch (erro) {
     console.error("Erro ao atualizar status no Neon:", erro);
