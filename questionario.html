@@ -43,22 +43,45 @@
       color: #145fae;
     }
 
-    #pergunta {
-      font-size: 22px;
-      font-weight: bold;
-      margin: 35px 0 25px;
+    #container-perguntas {
+      margin-top: 25px;
     }
 
-    #alternativas label {
+    .info-questao {
+      font-size: 14px;
+      color: #666;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .texto-pergunta {
+      font-size: 22px;
+      font-weight: bold;
+      margin: 10px 0 25px;
+      color: #333;
+    }
+
+    .opcao-label {
       display: block;
       font-size: 20px;
       margin: 16px 0;
+      background: #f4f7f6;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      transition: background 0.2s;
     }
 
-    #alternativas input {
+    .opcao-label:hover {
+      background: #eef2f5;
+    }
+
+    .opcao-label input {
       width: 22px;
       height: 22px;
-      margin-right: 10px;
+      margin-right: 12px;
+      vertical-align: middle;
     }
 
     .btn-responder {
@@ -85,13 +108,6 @@
       font-size: 18px;
       cursor: pointer;
     }
-
-    #resultado {
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-      margin-top: 20px;
-    }
   </style>
 </head>
 
@@ -105,19 +121,14 @@
 
     <div class="topico-box">
       <strong>Tópico finalizado:</strong>
-
-      <p id="topicoFinalizado">
-        Carregando...
-      </p>
+      <p id="topicoFinalizado">Carregando...</p>
     </div>
 
-    <p id="pergunta">
-      Gerando pergunta com Gemini...
-    </p>
+    <div id="container-perguntas">
+      <p class="texto-pergunta" style="text-align: center;">Gerando pergunta com Gemini...</p>
+    </div>
 
-    <div id="alternativas"></div>
-
-    <button class="btn-responder" onclick="responder()">
+    <button class="btn-responder" onclick="responderQuestao()">
       Responder
     </button>
 
@@ -125,160 +136,124 @@
       Voltar
     </button>
 
-    <p id="resultado"></p>
-
   </div>
 
   <script>
-    const API_URL = "https://organizador-de-estudos-ucy2.vercel.app";
+    // Configuração Dinâmica do Endpoint
+    const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? "http://localhost:3000" 
+      : "https://organizador-de-estudos-ucy2.vercel.app";
 
-    let perguntaAtual = null;
-    let respostaSelecionada = null;
+    // Variáveis Globais de Controle da Paginação
+    let perguntasGlobais = [];
+    let indiceAtual = 0;
 
-    // PEGAR ID DA URL
+    // Pega o ID da tarefa vindo da URL (?id=33)
     const params = new URLSearchParams(window.location.search);
     const tarefaId = params.get("id");
 
-    // CARREGAR QUESTIONÁRIO
+    // 1. CARREGAR QUESTIONÁRIO DA API
     async function carregarQuestionario() {
       try {
-        // SEM ID
         if (!tarefaId) {
-          document.getElementById("topicoFinalizado").innerText =
-            "Nenhuma tarefa selecionada.";
-
-          document.getElementById("pergunta").innerText =
-            "Volte ao planejamento e marque uma tarefa como concluída.";
-
+          alert("ID do questionário não encontrado na URL.");
           return;
         }
 
-        // CHAMAR API NO VERCEL
-        const resposta = await fetch(
-          `${API_URL}/api/gerar-questionario/${tarefaId}`
-        );
-
-        if (!resposta.ok) {
-          throw new Error("Erro ao buscar questionário");
-        }
-
+        // Faz o fetch dinâmico usando o seu endpoint configurado
+        const resposta = await fetch(`${API_URL}/api/gerar-questionario/${tarefaId}`);
         const dados = await resposta.json();
 
-        // ERRO API
-        if (!dados.sucesso) {
-          document.getElementById("topicoFinalizado").innerText =
-            "Erro ao carregar tópico.";
+        console.log("Dados recebidos do servidor:", dados);
 
-          // LIMITE GEMINI
-          if (
-            dados.mensagem &&
-            (
-              dados.mensagem.includes("quota") ||
-              dados.mensagem.includes("429") ||
-              dados.mensagem.includes("Too Many Requests")
-            )
-          ) {
-            document.getElementById("pergunta").innerText =
-              "Limite gratuito da IA atingido. Tente novamente mais tarde.";
+        if (dados && dados.sucesso && dados.perguntas && dados.perguntas.length > 0) {
+          perguntasGlobais = dados.perguntas;
+          indiceAtual = 0;
 
-            return;
-          }
+          // Atualiza o Tópico com a Matéria Real vinda do Banco (ex: GA4)
+          document.getElementById("topicoFinalizado").innerText = dados.materia || perguntasGlobais[0]?.materia || "Geral";
 
-          document.getElementById("pergunta").innerText =
-            dados.mensagem || "Erro ao gerar pergunta.";
-
-          return;
+          // Carrega a primeira questão gerada pela IA na tela
+          mostrarPergunta();
+        } else {
+          alert("Erro ao processar questionário: " + (dados.mensagem || "Erro desconhecido"));
         }
-
-        // SALVAR PERGUNTA
-        perguntaAtual = dados.questionario;
-
-        // MOSTRAR TÓPICO
-        document.getElementById("topicoFinalizado").innerText =
-          `${perguntaAtual.materia} - ${perguntaAtual.topico}`;
-
-        // MOSTRAR PERGUNTA
-        mostrarPergunta();
-
-      } catch (erro) {
-        console.error("Erro ao carregar questionário:", erro);
-
-        document.getElementById("topicoFinalizado").innerText =
-          "Erro.";
-
-        document.getElementById("pergunta").innerText =
-          "Erro ao carregar questionário.";
+      } catch (error) {
+        console.error("Erro ao carregar questionário no front-end:", error);
+        document.getElementById("container-perguntas").innerHTML = `<p class="texto-pergunta" style="color:red;">Erro ao estabelecer conexão com o servidor.</p>`;
       }
     }
 
-    // MOSTRAR PERGUNTA
+    // 2. RENDERIZAR A QUESTÃO DA VEZ na tela
     function mostrarPergunta() {
-      if (!perguntaAtual) {
-        return;
+      const container = document.getElementById("container-perguntas");
+      if (!container || perguntasGlobais.length === 0) return;
+
+      const item = perguntasGlobais[indiceAtual];
+      let alternativasHTML = "";
+
+      if (item.alternativas && Array.isArray(item.alternativas)) {
+        item.alternativas.forEach((alt, i) => {
+          alternativasHTML += `
+            <label class="opcao-label">
+              <input type="radio" name="opcao_questao" value="${i}">
+              ${alt}
+            </label>
+          `;
+        });
       }
 
-      document.getElementById("pergunta").innerText =
-        perguntaAtual.pergunta;
-
-      const divAlternativas =
-        document.getElementById("alternativas");
-
-      divAlternativas.innerHTML = "";
-
-      // ALTERNATIVAS
-      perguntaAtual.alternativas.forEach((alternativa, index) => {
-        divAlternativas.innerHTML += `
-          <label>
-            <input
-              type="radio"
-              name="alternativa"
-              value="${index}"
-              onchange="selecionarResposta(${index})"
-            >
-
-            ${alternativa}
-          </label>
-        `;
-      });
+      // Monta a estrutura da pergunta usando os seus estilos
+      container.innerHTML = `
+        <p class="info-questao">QUESTÃO ${indiceAtual + 1} DE ${perguntasGlobais.length}</p>
+        <p class="texto-pergunta">${item.pergunta}</p>
+        <div id="alternativas">
+          ${alternativasHTML}
+        </div>
+      `;
     }
 
-    // SALVAR RESPOSTA
-    function selecionarResposta(index) {
-      respostaSelecionada = index;
-    }
-
-    // RESPONDER
-    function responder() {
-      if (!perguntaAtual) {
-        alert("A pergunta ainda não foi carregada.");
+    // 3. VALIDAR RESPOSTA E AVANÇAR DE QUESTÃO
+    function responderQuestao() {
+      if (perguntasGlobais.length === 0) {
+        alert("O questionário ainda não foi carregado corretamente.");
         return;
       }
 
-      if (respostaSelecionada === null) {
-        alert("Selecione uma alternativa!");
+      // Obtém o radio button selecionado pelo usuário
+      const opcaoSelecionada = document.querySelector('input[name="opcao_questao"]:checked');
+
+      if (!opcaoSelecionada) {
+        alert("Por favor, selecione uma alternativa antes de continuar!");
         return;
       }
 
-      const resultado = document.getElementById("resultado");
+      const respostaDoUsuario = parseInt(opcaoSelecionada.value);
+      const respostaCorreta = perguntasGlobais[indiceAtual].correta;
 
-      if (
-        Number(respostaSelecionada) ===
-        Number(perguntaAtual.correta)
-      ) {
-        resultado.style.color = "green";
-        resultado.innerText = "Resposta correta!";
+      // Valida o acerto
+      if (respostaDoUsuario === respostaCorreta) {
+        alert("Resposta correta! 🎉");
       } else {
-        resultado.style.color = "red";
-        resultado.innerText = "Resposta incorreta. Revise o tópico.";
+        alert("Resposta incorreta! ❌");
+      }
+
+      // Verifica se existem mais perguntas geradas pela IA para mostrar
+      if (indiceAtual < perguntasGlobais.length - 1) {
+        indiceAtual++;     // Move o contador para a próxima pergunta
+        mostrarPergunta(); // Renderiza a nova pergunta na tela
+      } else {
+        alert("Parabéns! Você finalizou o questionário. ");
+        voltar();          // Redireciona de volta
       }
     }
 
-    // VOLTAR
+    // 4. RETORNAR À TELA DE PLANEJAMENTO
     function voltar() {
       window.location.href = "planejamento.html";
     }
 
-    // INICIAR
+    // Executa a carga inicial quando a página abre
     carregarQuestionario();
   </script>
 

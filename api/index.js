@@ -6,7 +6,14 @@ const multer = require("multer");
 const path = require("path");
 const { Pool } = require("pg");
 
+// 1. IMPORTA O SDK DO GEMINI
+const { GoogleGenAI } = require("@google/genai");
+
+// 2. INICIALIZA O OBJETO "ai" USANDO A CHAVE DO .ENV
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
 const app = express();
+// O restante dos seus middlewares (app.use...) e rotas continuam aqui para baixo
 
 // ==========================================
 // MIDDLEWARES
@@ -74,7 +81,7 @@ app.get("/api/health", (req, res) => {
 
 
 // ==========================================
-// ROTA: GERAR SIMULADO BASEADO NO MATERIAL DO BANCO
+// ROTA: ROTA SIMULADO 
 // ==========================================
 app.get("/api/gerar-simulado", async (req, res) => {
   try {
@@ -128,8 +135,111 @@ app.get("/api/gerar-simulado", async (req, res) => {
     });
   }
 });
+// ==========================================
+// ROTA: ROTA QUESTIONARIO
+// ==========================================
 
+app.get("/api/gerar-questionario/:id", async (req, res) => {
+  // Declaramos as variáveis aqui fora para que o bloco 'catch' consiga usá-las no Plano B
+  let materiaAlvo = "Conhecimentos Gerais";
+  let topicoAlvo = "Estudos Gerais";
 
+  try {
+    const { id } = req.params;
+
+    // 1. Busca os dados da tarefa no banco de dados Neon usando o ID recebido
+    const resultado = await pool.query("SELECT materia, topico FROM tarefa WHERE id = $1", [id]);
+    
+    // Se não encontrar a tarefa com esse ID, já avisa o front-end aqui
+    if (resultado.rows.length === 0) {
+      return res.status(404).json({ sucesso: false, mensagem: "Tarefa não encontrada." });
+    }
+
+    // Atualiza as variáveis com os dados reais do banco
+    materiaAlvo = resultado.rows[0].materia;
+    topicoAlvo = resultado.rows[0].topico;
+
+    // 2. AQUI ENTRA O BLOCO DA IA
+    const respostaIA = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `Gere 2 perguntas de múltipla escolha sobre a matéria "${materiaAlvo}" e o tópico "${topicoAlvo}".`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              materia: { type: "STRING" },
+              pergunta: { type: "STRING" },
+              alternativas: {
+                type: "ARRAY",
+                items: { type: "STRING" }
+              },
+              correta: { type: "INTEGER" } 
+            },
+            required: ["materia", "pergunta", "alternativas", "correta"]
+          }
+        }
+      }
+    });
+
+    // Transforma o texto rígido que a IA cuspiu em um Objeto/Array Javascript de verdade
+    const perguntasGeradas = JSON.parse(respostaIA.text);
+
+    // 3. ARRUMADO PARA O FRONT-END: 
+    // Enviamos 'materia' direto aqui na raiz da resposta. Assim o dados.materia da sua linha 201 vai funcionar!
+    res.json({
+      sucesso: true,
+      materia: materiaAlvo, 
+      perguntas: perguntasGeradas
+    });
+
+  } catch (erro) {
+    console.error("Erro interno na rota /api/gerar-questionario:", erro);
+
+    // --- INSTABILIDADE DA IA: PLANO B EM AÇÃO ---
+    if (erro.status === 503 || (erro.message && erro.message.includes("demand"))) {
+      console.log("⚠️ Gemini fora do ar ou sobrecarregado. Ativando Plano B de contingência...");
+
+      const perguntasFallback = [
+        {
+          materia: materiaAlvo,
+          pergunta: `Considerando o tema central de "${topicoAlvo}" na disciplina de ${materiaAlvo}, qual das alternativas apresenta uma diretriz correta sobre o assunto?`,
+          alternativas: [
+            "A implementação deve ocorrer ignorando os fatores de latência do sistema.",
+            "Trata-se de um concept fundamental para a estruturação de fluxos operacionais e acadêmicos coerentes.",
+            "Os parâmetros definidos são aplicados exclusivamente a ambientes locais simulados.",
+            "Nenhuma das opções anteriores correlaciona-se com o material estudado."
+          ],
+          correta: 1
+        },
+        {
+          materia: materiaAlvo,
+          pergunta: `No contexto prático de "${topicoAlvo}", qual é a principal recomendação descrita para evitar erros de validação?`,
+          alternativas: [
+            "Sanitizar strings removendo acentos e caracteres especiais das entradas de dados.",
+            "Manter codificações legadas do tipo 7bit sem tratamento de normatização Unicode.",
+            "Forçar o carregamento de estruturas brutas ignorando os mapeamentos de requisições.",
+            "Interromper a persistência de dados em ambientes relacionais."
+          ],
+          correta: 0
+        }
+      ];
+
+      // ARRUMADO PARA O FRONT-END NO PLANO B TAMBÉM:
+      return res.json({
+        sucesso: true,
+        materia: materiaAlvo, 
+        perguntas: perguntasFallback,
+        modoSeguranca: true 
+      });
+    }
+
+    // Se for outro tipo de erro (erro de sintaxe, banco, etc.), mantém o Erro 500 padrão
+    res.status(500).json({ sucesso: false, mensagem: "Erro ao gerar questionário." });
+  }
+});
 // ==========================================
 // ROTA: SALVAR TAREFA 
 // ==========================================
@@ -137,7 +247,7 @@ app.post("/api/salvar-tarefa", upload.single("pdf"), (req, res) => {
   console.log("BODY RECEBIDO:", req.body);
   console.log("ARQUIVO NA MEMÓRIA RAM:", req.file);
 
-  const { materia, topico, dificuldade, dataProva } = req.body;
+  const { materia, topico,dificuldade,dataProva } = req.body;
 
   if (!req.file) {
     return res.status(400).json({ 
@@ -185,7 +295,7 @@ app.post("/api/salvar-tarefa", upload.single("pdf"), (req, res) => {
       console.log("DATA FORMATADA PARA O NEON:", dataFormatada);
 
       const novaTarefa = await pool.query(
-        "INSERT INTO tarefa (materia, topico, titulo,微dificuldade, prazo, pdf, concluida) VALUES ($1, $2, $3, $4, $5, $6, false) RETURNING *",
+        "INSERT INTO tarefa (materia, topico, titulo,dificuldade, prazo, pdf, concluida) VALUES ($1, $2, $3, $4, $5, $6, false) RETURNING *",
         [
           materia || "Sem matéria", 
           topico || "Sem tópico", 
