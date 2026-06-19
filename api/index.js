@@ -23,9 +23,11 @@ app.use(cors({
     "http://localhost:3000",
     "http://localhost:5500",
     "http://127.0.0.1:5500",
-    "https://organizador-de-estudos-ucy2.vercel.app",
-    "https://organizador-de-estudos-phi.vercel.app"
-  ]
+    "https://organizador-de-estudos-phi.vercel.app",
+    "https://organizador-de-estudos-ucy2.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(express.json());
 
