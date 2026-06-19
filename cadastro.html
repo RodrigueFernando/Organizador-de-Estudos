@@ -37,7 +37,10 @@
   </div>
 
   <script>
-    const API_URL = "";
+    const API_URL =
+    window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://organizador-de-estudos-phi.vercel.app";
 
     async function cadastrar() {
       const email = document.getElementById("email").value.trim();
