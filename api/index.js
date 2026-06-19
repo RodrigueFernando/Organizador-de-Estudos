@@ -21,10 +21,12 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://organizador-de-estudos-ucy2.vercel.app"
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "https://organizador-de-estudos-ucy2.vercel.app",
+    "https://organizador-de-estudos-phi.vercel.app"
   ]
 }));
-
 app.use(express.json());
 
 // Arquivos estáticos (frontend)
