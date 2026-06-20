@@ -8,29 +8,37 @@
 </head>
 
 <body>
-  <div class="container">
-    <div class="card">
-      <h2>PLANEJAMENTO DE ESTUDOS</h2>
+ <div class="container">
+  <div class="card">
 
-      <p>Conteúdo do dia:</p>
+    <h2>PLANEJAMENTO DE ESTUDOS</h2>
 
-      <div id="listaTarefas"></div>
+    <p>Conteúdo do dia:</p>
 
-      <div class="footer-buttons">
-        <button type="button" class="btn primary" onclick="verProgresso()">
-          Ver Progresso
-        </button>
+    <div id="listaTarefas"></div>
 
-        <button type="button" class="btn outline" onclick="adicionarTarefa()">
-          Adicionar Tarefa
-        </button>
+    <div class="footer-buttons">
 
-        <button type="button" class="btn primary" onclick="abrirSimulado()">
-          Fazer Simulado
-        </button>
-      </div>
+      <button type="button" class="btn primary" onclick="verProgresso()">
+        Ver Progresso
+      </button>
+
+      <button type="button" class="btn outline" onclick="adicionarTarefa()">
+        Adicionar Tarefa
+      </button>
+
+      <button type="button" class="btn primary" onclick="abrirSimulado()">
+        Fazer Simulado
+      </button>
+
+      <button type="button" class="btn outline" onclick="sair()">
+        Sair do Sistema
+      </button>
+
     </div>
+
   </div>
+</div>
 
   <script>
     const API_URL = "https://organizador-de-estudos-ucy2.vercel.app";
@@ -127,47 +135,52 @@ tarefas.forEach((tarefa) => {
 
 console.log("lista.innerHTML final:", lista.innerHTML);
 
-    // TESTE 4
-    console.log("HTML gerado:", lista.innerHTML);
+// TESTE 4
+console.log("HTML gerado:", lista.innerHTML);
+
+} catch (erro) {
+  console.error("Erro ao carregar tarefas:", erro);
+
+  document.getElementById("listaTarefas").innerHTML =
+    "<p>Erro ao carregar tarefas.</p>";
+}
+}
+
+async function alterarStatus(id, concluida) {
+  try {
+    const resposta = await fetch(`${API_URL}/api/atualizar-tarefa/${id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ concluida })
+    });
+
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) {
+      alert(dados.mensagem);
+      return;
+    }
+
+    if (concluida) {
+      window.location.href = `questionario.html?id=${id}`;
+    } else {
+      carregarTarefas();
+    }
 
   } catch (erro) {
-    console.error("Erro ao carregar tarefas:", erro);
-
-    document.getElementById("listaTarefas").innerHTML =
-      "<p>Erro ao carregar tarefas.</p>";
+    console.error("Erro ao atualizar tarefa:", erro);
+    alert("Erro ao atualizar tarefa.");
   }
 }
 
-    async function alterarStatus(id, concluida) {
-      try {
-        const resposta = await fetch(`${API_URL}/api/atualizar-tarefa/${id}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ concluida })
-        });
+function sair() {
+  localStorage.removeItem("usuario");
+  window.location.href = "index.html";
+}
 
-        const dados = await resposta.json();
-
-        if (!dados.sucesso) {
-          alert(dados.mensagem);
-          return;
-        }
-
-        if (concluida) {
-          window.location.href = `questionario.html?id=${id}`;
-        } else {
-          carregarTarefas();
-        }
-
-      } catch (erro) {
-        console.error("Erro ao atualizar tarefa:", erro);
-        alert("Erro ao atualizar tarefa.");
-      }
-    }
-
-    carregarTarefas();
-  </script>
+carregarTarefas();
+</script>
 </body>
 </html>
