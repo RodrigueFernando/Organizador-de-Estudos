@@ -204,7 +204,7 @@ app.get("/api/gerar-questionario/:id", async (req, res) => {
 
     // --- INSTABILIDADE DA IA: PLANO B EM AÇÃO ---
     if (erro.status === 503 || (erro.message && erro.message.includes("demand"))) {
-      console.log("⚠️ Gemini fora do ar ou sobrecarregado. Ativando Plano B de contingência...");
+      console.log(" Gemini fora do ar ou sobrecarregado. Ativando Plano B de contingência...");
 
       const perguntasFallback = [
         {

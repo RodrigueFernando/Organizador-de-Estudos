@@ -2,89 +2,69 @@
 <html lang="pt-br">
 <head>
 
-  <!-- configuração de caracteres -->
   <meta charset="UTF-8">
-
-  <!-- título -->
   <title>Progresso</title>
 
-  <!-- css -->
   <link rel="stylesheet" href="./Style/style.css">
 
 </head>
 
 <body>
 
-  <!-- container principal -->
   <div class="container">
 
-    <!-- card -->
     <div class="card">
 
-      <!-- título -->
       <h2>PROGRESSO DE ESTUDO</h2>
 
-      <!-- texto -->
       <p>Geral:</p>
 
-      <!-- lista de progresso -->
       <div class="progresso-box" id="listaProgresso"></div>
 
       <br>
 
-      <!-- botão voltar -->
       <button class="btn primary" onclick="voltarMenu()">
         Voltar para o Menu
       </button>
 
     </div>
+
   </div>
 
   <script>
 
     const API_URL = "https://organizador-de-estudos-ucy2.vercel.app";
 
-    // voltar para planejamento
     function voltarMenu() {
       window.location.href = "planejamento.html";
     }
 
-    // carregar progresso
     async function carregarProgresso() {
 
       const lista = document.getElementById("listaProgresso");
 
       try {
 
-        // buscar tarefas no Vercel
-        const resposta = await fetch("/api/tarefas");
+        const resposta = await fetch(`${API_URL}/api/tarefas`);
 
         if (!resposta.ok) {
           throw new Error("Erro ao buscar tarefas");
         }
 
-        // converter json
         const tarefas = await resposta.json();
 
-        // limpar conteúdo
-        lista.innerHTML = "<h3>📊 Gráfico de evolução</h3>";
+        lista.innerHTML = "<h3>Gráfico de evolução</h3>";
 
         if (!Array.isArray(tarefas) || tarefas.length === 0) {
           lista.innerHTML += "<p>Nenhuma tarefa cadastrada.</p>";
           return;
         }
 
-        // percorrer tarefas
         tarefas.forEach(tarefa => {
 
-          let progresso = 0;
-
-          if (tarefa.concluida === true) {
-            progresso = 100;
-          }
+          const progresso = tarefa.concluida ? 100 : 0;
 
           lista.innerHTML += `
-
             <div class="item-progresso">
 
               <span>
@@ -100,22 +80,21 @@
             </div>
 
             <br>
-
           `;
 
         });
 
       } catch (erro) {
 
-        console.log("erro:", erro);
+        console.error("Erro:", erro);
 
-        lista.innerHTML = "<p style='color:red;'>Erro ao carregar progresso.</p>";
+        lista.innerHTML =
+          "<p style='color:red;'>Erro ao carregar progresso.</p>";
 
       }
 
     }
 
-    // iniciar
     carregarProgresso();
 
   </script>
