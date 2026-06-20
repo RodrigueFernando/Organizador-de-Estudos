@@ -140,10 +140,9 @@
 
   <script>
     // Configuração Dinâmica do Endpoint
-    const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-      ? "http://localhost:3000" 
-      : "https://organizador-de-estudos-ucy2.vercel.app";
-
+   const API_URL = window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://organizador-de-estudos-ucy2.vercel.app";
     // Variáveis Globais de Controle da Paginação
     let perguntasGlobais = [];
     let indiceAtual = 0;
