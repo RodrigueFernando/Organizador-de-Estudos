@@ -40,10 +40,10 @@
 
   <script>
     // Configuração API para aceitar Localhost ou Vercel sem mexer no código
-   const API_URL =
-     window.location.hostname === "localhost"
-     ? "http://localhost:3000"
-     :"https://organizador-de-estudos-phi.vercel.app";
+ const API_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://organizador-de-estudos-ucy2.vercel.app";
 
     async function entrar() {
       const email = document.getElementById("email").value.trim();

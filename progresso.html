@@ -33,7 +33,10 @@
 
   <script>
 
-    const API_URL = "https://organizador-de-estudos-ucy2.vercel.app";
+    const API_URL =
+      window.location.hostname === "localhost"
+        ? "http://localhost:3000"
+        : "https://organizador-de-estudos-ucy2.vercel.app";
 
     function voltarMenu() {
       window.location.href = "planejamento.html";
@@ -45,10 +48,12 @@
 
       try {
 
+        console.log("Buscando:", `${API_URL}/api/tarefas`);
+
         const resposta = await fetch(`${API_URL}/api/tarefas`);
 
         if (!resposta.ok) {
-          throw new Error("Erro ao buscar tarefas");
+          throw new Error(`Erro HTTP ${resposta.status}`);
         }
 
         const tarefas = await resposta.json();
